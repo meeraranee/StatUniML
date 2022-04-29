@@ -70,8 +70,23 @@ The categorical variables are ID and Type. The quantitative variables are RI, Na
 
 (b) We checked for missing values above. There were none, so no variables were removed. The sample size of our full data set remains at 214 observations.
 
-(c)
+(c) Randomly create a validation/test data set that is approximately 10% of your full data set. Separate this out from your full data set. Treat the remaining 90% of your data set as your training data.
 ```{r}
+# check expected sample sizes of test/training data sets
+214*.9 # 90% of training data = 192.6
+214*.1 # 10% of test data = 21.4
 
+set.seed(2200)
+n <- length(glass$ID)
+Z <- sample(n,n/10)
+sort((1:n)[Z])
+sort((1:n)[-Z])
+
+train <- glass[sort(Z),] # 21 observations
+test <- glass[-sort(Z),] # 193 observations
+
+head(train)
+View(train)
+View(test)
 ```
 
