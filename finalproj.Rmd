@@ -15,9 +15,19 @@ library(tidyverse)
 ```
 
 
-# Load Data
+# Load data and clean
 ```{r}
-uni <- read.csv("university.data")
-head(uni)
+# load data
+glass <- read.csv("glass.csv", header = FALSE)
+head(glass)
+
+# check for missing values
+is.na(glass) # no missing values
+
+# rename columns
+glass %>%
+  rename(c(ID = V1, RI = V2, Na = V3, Mg = V4, Al = V5, Si = V6, K = V7,
+           Ca = V8, Ba = V9, Fe = V10, Type = V11)) -> glass
+head(glass)
 ```
 
