@@ -9,15 +9,24 @@ output: word_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+1. Choose a data set: Glass Identification Data Set from UCI ML Repository:
+https://archive.ics.uci.edu/ml/datasets/glass+identification
+
+(a) Data Type: Multivariate
+(b) Default Task: Classification
+(c) Attribute Types: Real
+(d) # Instances: 214
+(e) # Attributes: 10
+
+
 # Load libraries
 ```{r}
 library(tidyverse)
 ```
 
-
 # Load data and clean
 ```{r}
-# load data
+# load data (renamed .data to .csv)
 glass <- read.csv("glass.csv", header = FALSE)
 head(glass)
 
@@ -29,5 +38,40 @@ glass %>%
   rename(c(ID = V1, RI = V2, Na = V3, Mg = V4, Al = V5, Si = V6, K = V7,
            Ca = V8, Ba = V9, Fe = V10, Type = V11)) -> glass
 head(glass)
+```
+
+
+2.
+(a) 
+1. ID = Id number of glass from 1 to 214
+2. RI = Refractive Index
+3. Na = Sodium (unit measurement: weight percent in corresponding oxide, as are attributes 4-10)
+4. Mg = Magnesium
+5. Al = Aluminum
+6. Si = Silicon
+7. K = Potassium
+8. Ca = Calcium
+9. Ba = Barium
+10. Fe = Iron
+11. Type = Type of glass (class attribute):
+  1. building_windows_float_processed = float processed glass in building windows
+  2. building_windows_non_float_processed = non-float processed glass in building windows
+  3. vehicle_windows_float_processed = float processed glass in vehicle windows
+  4. vehicle_windows_non_float_processed (none in the database) = non-float processed glass in vehicle windows
+  5. containers = glass used for containers
+  6. tableware = glass used for tableware
+  7. headlamps = glass used for headlamps
+  
+Overall goal of analysis: The goal is to analyze the type of glass found at a crime scene in order to correctly distinguish if it is a type of "float processed" glass or not, with the least amount of statistical error.
+
+The response variable is Type. The predictor variables are ID, RI, Na, Mg, Al, Si, K, Ca, Ba, and Fe.
+
+The categorical variables are ID and Type. The quantitative variables are RI, Na, Mg, Al, Si, K, Ca, Ba, and Fe.
+
+(b) We checked for missing values above. There were none, so no variables were removed. The sample size of our full data set remains at 214 observations.
+
+(c)
+```{r}
+
 ```
 
