@@ -22,6 +22,8 @@ https://archive.ics.uci.edu/ml/datasets/glass+identification
 # Load libraries
 ```{r}
 library(tidyverse)
+library(e1071)
+library(ggplot2)
 ```
 
 # Load data and clean
@@ -38,6 +40,7 @@ glass %>%
   rename(c(ID = V1, RI = V2, Na = V3, Mg = V4, Al = V5, Si = V6, K = V7,
            Ca = V8, Ba = V9, Fe = V10, Type = V11)) -> glass
 head(glass)
+View(glass)
 ```
 
 
@@ -72,6 +75,34 @@ The categorical variables are ID and Type. The quantitative variables are RI, Na
 
 (c) Randomly create a validation/test data set that is approximately 10% of your full data set. Separate this out from your full data set. Treat the remaining 90% of your data set as your training data.
 ```{r}
+# make new variable called "FloatProcessed" and Types 1,3 = Yes (1) and Types 2, 4, 5, 6, 7 = No (0)
+head(glass)
+glass %>%
+  mutate(FloatProcessed = Type) -> glass
+
+# convert 3 to 1 (1 is already 1)
+glass$FloatProcessed[glass$FloatProcessed == 3] <- 1
+
+# convert 2, 4, 5, 6, 7 to 0
+glass$FloatProcessed[glass$FloatProcessed == 2] <- 0
+glass$FloatProcessed[glass$FloatProcessed == 4] <- 0
+glass$FloatProcessed[glass$FloatProcessed == 5] <- 0
+glass$FloatProcessed[glass$FloatProcessed == 6] <- 0
+glass$FloatProcessed[glass$FloatProcessed == 7] <- 0
+
+# convert 1 to Yes and 0 to No
+glass$FloatProcessed[glass$FloatProcessed == 1] <- "Yes"
+glass$FloatProcessed[glass$FloatProcessed == 0] <- "No"
+
+# convert Type and FloatProcessed to factor
+glass$Type <- as.factor(glass$Type)
+glass$FloatProcessed <- as.factor(glass$FloatProcessed)
+View(glass)
+
+# create new variable that takes average of Na, Mg, Al, Si, K, Ca, Ba, Fe
+glass$OxideNum <- rowMeans(glass[ , c(3, 4, 5, 6, 7, 8, 9, 10)], na.rm = TRUE)
+View(glass)
+
 # check expected sample sizes of test/training data sets
 214*.9 # 90% of training data = 192.6
 214*.1 # 10% of test data = 21.4
@@ -88,5 +119,90 @@ test <- glass[-sort(Z),] # 193 observations
 head(train)
 View(train)
 View(test)
+```
+Since the goal of our analysis is to distinguish whether or not the type of glass is float processed or non-float processed, we converted the float processed Types (1 and 3) to Yes and non-float processed/other glass Types (2, 4, 5, 6, 7) to No.
+
+3.
+(a) 
+1. The first method is the Support Vector Classifier. 
+  The model is: f(x*) = B0 + B1X1* + B2X2* + ... + BpXp*
+  The tuning parameter is the radial kernel.
+```{r}
+# choose best kernel
+set.seed(100)
+svmt <- tune(svm, FloatProcessed ~ ., data = glass, ranges = list(kernel = c("linear", "polynomial", "radial", "sigmoid")))
+svmt
+summary(svmt)
+```
+  
+2. The second method is Decision Trees.
+  The model is
+  The tuning parameter is max_features.
+
+3. The third method is Clustering.
+  The model is 
+
+  The tuning parameter is K-means.
+
+(b) Exploratory Data Analysis
+```{r}
+head(train)
+# ggpairs(train)
+```
+
+(c)
+
+(d)
+1. Support Vector Classifier Analysis
+```{r}
+# tune
+set.seed(100)
+svmt <- tune(svm, FloatProcessed ~ ., data = glass, ranges = list(kernel = c("linear", "polynomial", "radial", "sigmoid")))
+svmt
+summary(svmt)
+
+# tune on train data set
+svm.tuned <- svm(FloatProcessed ~ RI + OxideNum, data = train, kernel = "radial")
+svm.tuned
+plot(svm.tuned, train, RI ~ OxideNum) # OxideNum is the average of the element variables
+plot(svm.tuned, train, RI ~ Si) # Silicon is the main element in glass
+yhat = predict(svm.tuned)
+View(yhat)
+table(yhat, train$FloatProcessed)
+mean(yhat != train$FloatProcessed)
+
+# ROC
+pred <- prediction(as.numeric(yhat == "Yes"), as.numeric(train$FloatProcessed=="Yes"))
+perf <- performance(pred, "tpr", "fpr")
+perf # doesn't work because only tpr and fpr in confusion matrix
+plot(perf, colorize = T, lwd = 2)
+abline(a = 0, b = 1)
+abline(h = 1)
+abline(v = 0)
+performance(pred, measure = "auc")@y.values
+
+summary(glm(FloatProcessed ~ ., data = train, family = 'binomial'))
+
+# tune on test data set
+svm.tuned <- svm(FloatProcessed ~ RI + OxideNum, data = test, kernel = "radial")
+svm.tuned
+plot(svm.tuned, test, RI ~ OxideNum) # OxideNum is the average of the element variables
+plot(svm.tuned, test, RI ~ Si) # Silicon is the main element in glass
+yhat = predict(svm.tuned)
+View(yhat)
+table(yhat, test$FloatProcessed)
+mean(yhat != test$FloatProcessed)
+
+# ROC
+pred <- prediction(as.numeric(yhat == "Yes"), as.numeric(test$FloatProcessed == "Yes"))
+perf <- performance(pred, "tpr", "fpr")
+perf
+plot(perf, colorize = T, lwd = 2)
+abline(a = 0, b = 1)
+abline(h = 1)
+abline(v = 0)
+performance(pred, measure = "auc")@y.values
+
+summary(glm(FloatProcessed ~ ., data = test, family = 'binomial'))
 ```
 
